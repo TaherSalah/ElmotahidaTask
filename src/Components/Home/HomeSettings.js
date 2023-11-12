@@ -49,7 +49,7 @@ function HomeSettings() {
 
     const [gradSubjectsList, setGradSubjectsList] = useState(null);
     const [selectGradSubject, setSelectGradSubject] = useState(null);
-    useSelector((state) => state.currentCourse.course);  //use selector used to get data from redux store to component
+    useSelector((state) => state.currentCourse.course);  
     const dispatch = useDispatch();
     const history = useHistory();
 
@@ -209,7 +209,7 @@ function HomeSettings() {
 
 
 
-    const dialogFooter = <div className="flex justify-content-center"><Button label="OK" className="p-button-text"
+    const dialogFooter = <div className="flex justify-content-center"><Button label="تم" className="p-button-text"
         autoFocus onClick={() => setShowMessage(false)} /></div>;
     const courseDetails = (course) => {
         dispatch(setCurrentCourse(course));
@@ -251,19 +251,19 @@ function HomeSettings() {
     const addOrEdit = () => {
         if (flag == addState) {
             return (
-                <h5 className="text-center m-3">Add Course</h5>
+                <h5 className="text-center m-3">اضافة كورس</h5>
             )
         }
         else {
             return (
-                <h5 className="text-center m-3">Edit Course</h5>
+                <h5 className="text-center m-3">تعديل الكورس</h5>
             )
         }
     }
     return (
         <>
-            <Dialog header="Success Message" visible={showMessage} style={{ width: '50vw' }} footer={dialogFooter} onHide={() => setShowMessage(false)}>
-                <h5> The Cource Has Been Added Successfully </h5>
+            <Dialog header="تاكيد الاضافه" visible={showMessage} style={{ width: '50vw'  , direction:'rtl'}} footer={dialogFooter} onHide={() => setShowMessage(false)}>
+                <h5> تم اضافة الكورس بنجاح </h5>
             </Dialog>
             <div >
                 <div>
@@ -341,7 +341,7 @@ function HomeSettings() {
                                 {getFormErrorMessage('subjectId')}
                             </div>
 
-                            <Button type="submit" label="Submit" className="mt-2" />
+                            <Button type="submit" label="ارسال" className="mt-2 addbtn" />
                         </form>
                     </div>
 

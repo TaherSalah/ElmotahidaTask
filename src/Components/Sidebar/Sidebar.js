@@ -6,7 +6,7 @@ function Sidebar() {
     const menuItem = [
         {
             path: "/app/main",
-            name: "Course Add",
+            name: "اضافة كورس",
 
         },
     ]
