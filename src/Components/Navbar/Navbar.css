@@ -1,0 +1,11 @@
+  .nav {
+    background-color: #39A7FF;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 2rem;
+  }
+  .site-title {
+    font-size: 25px;
+
+  }
