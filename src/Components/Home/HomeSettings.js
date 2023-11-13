@@ -1,6 +1,6 @@
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useFormik } from 'formik';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
@@ -13,17 +13,18 @@ import { InputText } from 'primereact/inputtext';
 import { classNames } from 'primereact/utils';
 import { Dropdown } from 'primereact/dropdown';
 import { useSelector, useDispatch } from 'react-redux';
-import { setCurrentCourse } from '../../Actions/currentCourseActions.js';
 import { useHistory } from 'react-router-dom';
-
+import { Toast } from 'primereact/toast'
 
 function HomeSettings() {
 
+
+    const toast = useRef(null);
+
+
     const editState = 0;
-    const addState = 1;
-    const [flag, setflag] = useState(-1);
-
-
+    // const addState = 1;
+    const [addState, setAddState] = useState(false);
 
     const [allcoursesList, setallcourses] = useState([]);
     const [visible, setVisible] = useState(false);
@@ -33,12 +34,8 @@ function HomeSettings() {
     const [formData, setFormData] = useState({});
     const [courseAdd, setCourseAdd] = useState(new Course())
 
-
-
     const [countryList, setCountryList] = useState([]);
     const [selectCountry, setSelectCountry] = useState(null);
-
-
 
     const [standardList, setStandardList] = useState();
     const [selectStandard, setSelectStandard] = useState(null);
@@ -46,21 +43,22 @@ function HomeSettings() {
     const [standardGradList, setStandardGradList] = useState();
     const [selectStandardGrade, setselectStandardGrade] = useState(null);
 
-
     const [gradSubjectsList, setGradSubjectsList] = useState(null);
     const [selectGradSubject, setSelectGradSubject] = useState(null);
-    useSelector((state) => state.currentCourse.course);  
-    const dispatch = useDispatch();
     const history = useHistory();
+
+    useSelector((state) => state.currentCourse.course);
+    const dispatch = useDispatch();
+
 
 
     useEffect(() => {
-
         formik.setValues({
             ...courseAdd
-        })
+        });
 
     }, [courseAdd])
+
 
     useEffect(() => {
         courseAdd.ccoRef.getCountries(function (response) {
@@ -68,24 +66,22 @@ function HomeSettings() {
         });
     }, [])
 
+
     useEffect(() => {
         if (selectCountry) {
             courseAdd.ccoRef.countryId = selectCountry.COUNTRY_ID
             courseAdd.ccoRef.getStandard(selectCountry.COUNTRY_ID, function (response) {
                 setStandardList(response.data.detail)
-
             })
         }
     }, [selectCountry]);
 
+
     useEffect(() => {
         if (selectStandard) {
-
             courseAdd.ccoRef.standardId = selectStandard.STANDARD_ID;
-
             courseAdd.ccoRef.getStandardGrad(selectStandard.STANDARD_ID, function (response) {
                 setStandardGradList(response.data.detail)
-
             })
         }
     }, [selectStandard]);
@@ -93,13 +89,12 @@ function HomeSettings() {
     useEffect(() => {
         if (selectStandardGrade) {
             courseAdd.ccoRef.grade = selectStandardGrade.GRADE_ID;
-
             courseAdd.ccoRef.getGradSubjects(selectStandardGrade.GRADE_ID, function (response) {
                 setGradSubjectsList(response.data.detail)
             })
-
         }
     }, [selectStandardGrade]);
+
 
     useEffect(() => {
         if (selectGradSubject) {
@@ -110,10 +105,12 @@ function HomeSettings() {
 
 
 
+
     const formik = useFormik({
         initialValues: {
             ...courseAdd
         },
+
 
         validate: (data) => {
             let errors = {};
@@ -156,14 +153,16 @@ function HomeSettings() {
         },
         onSubmit: (data) => {
 
-            if (flag == addState)
-                submitAdd(data)
+            if (addState) {
+                submitAdd(data);
+
+            }
             else {
                 submitEdit(data)
             }
         }
     });
-
+    console.log(allcoursesList);
 
 
     const submitEdit = (data) => {
@@ -178,28 +177,49 @@ function HomeSettings() {
                 if (item.courseId == course.courseId) {
                     item.initFromJson(course)
                 }
+            });
+            setallcourses(listData);
+            toast.current.show({
+                severity: 'success',
+                life: 3000,
+                detail: 'تم تعديل الكورس بنجاح'
             })
-            setallcourses(listData)
             setFormData(course);
             setShowMessage(true);
             setVisible(false)
             formik.resetForm();
-        })
-        dispatch(setCurrentCourse(course));
+        });
+        dispatch({
+            type: 'SET_CURRENT_COURSE',
+            payload: course,
+        });
     }
 
     const submitAdd = (data) => {
-        let course = new Course()
-        course.initFromJson(data)
+        let course = new Course();
+        const filterGradeList = gradSubjectsList.filter((item) => item.SUBJECT_ID == data.ccoRef.subjectId);
+        filterGradeList.map((item) => course.subjectName = item.SUBJECT_NAME)
+        course.initFromJson(data);
+
         course.saveRecentCourse(() => {
             setFormData(course);
             setShowMessage(true);
             setVisible(false)
-            allcoursesList.push(course)
-            dispatch(setCurrentCourse(course));
+            allcoursesList.push(course);
+            setallcourses(allcoursesList);
+            toast.current.show({
+                severity: 'success',
+                life: 3000,
+                detail: 'لقد تم إضافة الكورس بنجاح'
+            })
+            dispatch({
+                type: 'SET_CURRENT_COURSE',
+                payload: course,
+            });
             formik.resetForm();
-        })
+        });
     }
+
 
     const isFormFieldValid = (name) => !!(formik.touched[name] && formik.errors[name]);
     const getFormErrorMessage = (name) => {
@@ -212,7 +232,10 @@ function HomeSettings() {
     const dialogFooter = <div className="flex justify-content-center"><Button label="تم" className="p-button-text"
         autoFocus onClick={() => setShowMessage(false)} /></div>;
     const courseDetails = (course) => {
-        dispatch(setCurrentCourse(course));
+        dispatch({
+            type: 'SET_CURRENT_COURSE',
+            payload: course,
+        });
         history.push(`/app/courseDetails/${course.courseId}`);
     };
 
@@ -221,7 +244,6 @@ function HomeSettings() {
         return (
             <>
                 <Button className="addbtn" label="تعديل" onClick={() => showEditDialog(course)} />
-
             </>
 
         )
@@ -235,21 +257,24 @@ function HomeSettings() {
 
         )
     }
-
     const showEditDialog = (course) => {
-        setflag(editState);
+        setAddState(false)
         setCourseAdd(course)
         setVisible(true)
+
     }
     const showFormDialog = () => {
-        setflag(addState)
+        setAddState(true)
         setVisible(true)
-        formik.resetForm()
-        setCourseAdd(new Course())
+        setCourseAdd(new Course());
+        setSelectCountry('');
+        setSelectGradSubject('');
+        setselectStandardGrade('');
+        setSelectStandard('')
     }
-
+console.log(formik.values)
     const addOrEdit = () => {
-        if (flag == addState) {
+        if (addState) {
             return (
                 <h5 className="text-center m-3">اضافة كورس</h5>
             )
@@ -262,9 +287,7 @@ function HomeSettings() {
     }
     return (
         <>
-            <Dialog header="تاكيد الاضافه" visible={showMessage} style={{ width: '50vw'  , direction:'rtl'}} footer={dialogFooter} onHide={() => setShowMessage(false)}>
-                <h5> تم اضافة الكورس بنجاح </h5>
-            </Dialog>
+            <Toast ref={toast} />
             <div >
                 <div>
                     <Button label="اضافه" icon="pi pi-external-link" className="addbtn m-5" onClick={showFormDialog} />
@@ -272,7 +295,7 @@ function HomeSettings() {
 
                 <Dialog header="" visible={visible} style={{ width: '50vw' }} onHide={() => setVisible(false)}>
                     <div className="card ">
-                        {addOrEdit(flag)}
+                        {addOrEdit(addState)}
                         <form onSubmit={formik.handleSubmit} className="p-fluid">
 
                             <div className="field ">
@@ -352,6 +375,7 @@ function HomeSettings() {
                         <Column field="courseId" header="ID" ></Column>
                         <Column field="courseName" header="Name"></Column>
                         <Column field="themeColor" header="Theme"></Column>
+                        <Column field="subjectName" header="subjectName"></Column>
                         <Column header="Edit" body={EditBtn}></Column>
                         <Column header="Details" body={DetailsBtn}></Column>
                     </DataTable>
