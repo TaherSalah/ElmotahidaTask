@@ -162,7 +162,6 @@ function HomeSettings() {
             }
         }
     });
-    console.log(allcoursesList);
 
 
     const submitEdit = (data) => {
@@ -272,7 +271,7 @@ function HomeSettings() {
         setselectStandardGrade('');
         setSelectStandard('')
     }
-console.log(formik.values)
+    console.log(formik.values)
     const addOrEdit = () => {
         if (addState) {
             return (
@@ -290,7 +289,7 @@ console.log(formik.values)
             <Toast ref={toast} />
             <div >
                 <div>
-                    <Button label="اضافه" icon="pi pi-external-link" className="addbtn m-5" onClick={showFormDialog} />
+                    <Button label="اضافه" icon="pi pi-plus" className="addbtn m-5" onClick={showFormDialog} />
                 </div>
 
                 <Dialog header="" visible={visible} style={{ width: '50vw' }} onHide={() => setVisible(false)}>
